@@ -1,75 +1,44 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 public class Board
 {
-    private enum Direction
+    private static Board _instance = new Board();
+    private static int _boardSize = 9;
+    private static int _playerNum = 2;
+
+    public static Board GetBoard() => _instance;
+
+    public int[] NumsWall { get; private set; } // 壁の残り枚数
+    public int WinnerNum { get; private set; } // -1で初期化、勝った人のindexに更新される
+    public String ErrorMsg { get; private set; } // エラーメッセージ、壁が置けなかったときに更新
+
+    private Player[] _players;
+    private bool[,] _boardMat;
+
+    private Board() {} // Singleton
+
+    public void InitializeBoard()
     {
-        North,
-        East,
-        South,
-        West
-    }
+        _players = new Player[_playerNum];
+        _players[0] = new Player(_boardSize - 1, (_boardSize - 1) / 2, Direction.North);
+        _players[1] = new Player(0, (_boardSize - 1) / 2, Direction.South);
 
-    private class Player
-    {
-        public int X { get; private set; }
-        public int Y { get; private set; }
-        public Direction Dir { get; }
-
-        public Player(int x, int y, Direction dir)
-        {
-            X = x;
-            Y = y;
-            Dir = dir;
-        }
-
-        public void Move(int newX, int newY)
-        {
-            X = newX;
-            Y = newY;
-        }
-    }
-
-    public event Action<int> Won;
-    private void OnWon(int playerIndex) => Won?.Invoke(playerIndex);
-
-    public event Action<String> SelectedInaccessibleLoc;
-    private void OnSelectedInaccessibleLoc(String msg) => SelectedInaccessibleLoc?.Invoke(msg);
-
-    public int[] NumsWall { get; private set; }
-
-    private readonly int _boardSize;
-    private readonly int _boardMatSize;
-    private readonly int _leftEnd, _rightEnd, _center;
-    private readonly bool[,] _boardMat;
-    private readonly Player[] _players;
-
-    public Board()
-    {
-        _boardSize = 9;
-        _leftEnd = 0;
-        _rightEnd = _boardSize - 1;
-        _center = (_leftEnd + _rightEnd) / 2;
-        _boardMatSize = _boardSize * 2 + 1;
-        _boardMat = new bool[_boardMatSize, _boardMatSize];
-        InitializeBoard();
-        _players = new Player[2];
-        _players[0] = new Player(_rightEnd, _center, Direction.North);
-        _players[1] = new Player(_leftEnd, _center, Direction.South);
-        NumsWall = new int[2] { 10, 10 };
-    }
-
-    private void InitializeBoard()
-    {
-        for (int i = 0; i < _boardMatSize; i++)
+        var boardMatSize = GetBoardMatSize();
+        _boardMat = new bool[boardMatSize, boardMatSize];
+        for (int i = 0; i < boardMatSize; i++)
         {
             _boardMat[i, 0] = true;
-            _boardMat[i, _boardMatSize - 1] = true;
+            _boardMat[i, boardMatSize - 1] = true;
             _boardMat[0, i] = true;
-            _boardMat[_boardMatSize - 1, i] = true;
+            _boardMat[boardMatSize - 1, i] = true;
         }
+
+        NumsWall = new int[2] { 10, 10 };
+        WinnerNum = -1;
+        ErrorMsg = "";
     }
 
     public void Move(int playerIndex, int newX, int newY)
@@ -83,17 +52,17 @@ public class Board
 
         if (IsWinning(p.X, p.Y, p.Dir))
         {
-            OnWon(playerIndex);
+            WinnerNum = playerIndex;
         }
     }
 
     private bool IsWinning(int x, int y, Direction dir) =>
         dir switch
         {
-            Direction.North => x == _leftEnd,
-            Direction.South => x == _rightEnd,
-            Direction.West => y == _leftEnd,
-            Direction.East => y == _rightEnd,
+            Direction.North => x == 0,
+            Direction.South => x == _boardSize - 1,
+            Direction.West => y == 0,
+            Direction.East => y == _boardSize - 1,
             _ => false
         };
 
@@ -110,7 +79,7 @@ public class Board
         return locs.Select(t => ((t.Item1 - 1) / 2, (t.Item2 - 1) / 2)).ToList().AsReadOnly();
     }
 
-    private IEnumerable<(int, int)> GetAccessibleLocs(int i, int j, Direction dir)
+    private IEnumerable<(int, int)> GetAccessibleLocs(int i, int j, Direction dir) // 
     {
         var (wallI, wallJ) = GetBoardIndexFromDist(i, j, 1, dir);
         if (!_boardMat[wallI, wallJ]) // 壁がなければ
@@ -122,7 +91,7 @@ public class Board
                 if (_boardMat[wallI, wallJ]) // さらにその先に壁があれば
                 {
                     // 左方向のチェック
-                    var left = (Direction)(((int)dir + 3) % 4);
+                    var left = GetLeftDirection(dir);
                     var (leftWallI, leftWallJ) = GetBoardIndexFromDist(newI, newJ, 1, left);
                     var (leftNewI, leftNewJ) = GetBoardIndexFromDist(newI, newJ, 2, left);
                     if (!_boardMat[leftWallI, leftWallJ] && !_boardMat[leftNewI, leftNewJ])
@@ -131,7 +100,7 @@ public class Board
                     }
 
                     // 右方向のチェック
-                    var right = (Direction)(((int)dir + 1) % 4);
+                    var right = GetRightDirection(dir);
                     var (rightWallI, rightWallJ) = GetBoardIndexFromDist(newI, newJ, 1, right);
                     var (rightNewI, rightNewJ) = GetBoardIndexFromDist(newI, newJ, 2, right);
                     if (!_boardMat[rightWallI, rightWallJ] && !_boardMat[rightNewI, rightNewJ])
@@ -173,7 +142,7 @@ public class Board
             if (IsWinning(x, y, playerDir)) return true;
 
             var (i, j) = GetBoardIndexFromCellLoc(x, y);
-            var seq = new int[] { 0, 1, 3, 2 };
+            var seq = new int[] { 0, 1, 3, 2 }; // 目標方向に対して、正面、右、左、後ろの順に確認。A*もどき
             foreach (var c in seq)
             {
                 var nextDir = (Direction)(((int)playerDir + c) % 4);
@@ -192,7 +161,7 @@ public class Board
     {
         if (NumsWall[playerIndex] <= 0)
         {
-            OnSelectedInaccessibleLoc("手持ちの壁がありません！");
+            ErrorMsg = "手持ちの壁がありません！";
             return false;
         }
         var (i, j) = GetBoardIndexFromWallLoc(s, t);
@@ -208,7 +177,7 @@ public class Board
 
         if (_boardMat[i + io1, j + jo1] || _boardMat[i + io2, j + jo2])
         {
-            OnSelectedInaccessibleLoc("壁が重なっています！");
+            ErrorMsg = "壁が重なっています！";
             return false;
         }
 
@@ -221,7 +190,7 @@ public class Board
             _boardMat[i, j] = false;
             _boardMat[i + io1, j + jo1] = false;
             _boardMat[i + io2, j + jo2] = false;
-            OnSelectedInaccessibleLoc("そこには壁をおけません！");
+            ErrorMsg = "そこには壁をおけません！";
             return false;
         }
 
@@ -254,4 +223,36 @@ public class Board
             Direction.East => (i, j + dist),
             _ => (-1, -1)
         };
+    private Direction GetLeftDirection(Direction dir) => (Direction)(((int)dir + 3) % 4);
+    private Direction GetRightDirection(Direction dir) => (Direction)(((int)dir + 1) % 4);
+
+    private int GetBoardMatSize() => _boardSize * 2 + 1;
+
+    private enum Direction
+    {
+        North,
+        East,
+        South,
+        West
+    }
+
+    private class Player
+    {
+        public int X { get; private set; }
+        public int Y { get; private set; }
+        public Direction Dir { get; }
+
+        public Player(int x, int y, Direction dir)
+        {
+            X = x;
+            Y = y;
+            Dir = dir;
+        }
+
+        public void Move(int newX, int newY)
+        {
+            X = newX;
+            Y = newY;
+        }
+    }
 }

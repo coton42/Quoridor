@@ -51,8 +51,14 @@ public class UIManager : MonoBehaviour
         _currentPlayer = playerIndex;
         _accessibleLocs = locs;
         _players[playerIndex].transform.GetChild(0).gameObject.SetActive(true);
-        if (_isWallMode) ChangeMode();
-        else ActivateCells();
+        if (_isWallMode)
+        { 
+            ChangeMode(); 
+        }
+        else
+        {
+            ActivateCells();
+        }
     }
 
     public void UpdateNumWall(int playerIndex, int num)
@@ -101,7 +107,7 @@ public class UIManager : MonoBehaviour
 
     public void ChangeMode()
     {
-        _isWallMode ^= true;
+        _isWallMode ^= true; // ”½“]
         if (_isWallMode)
         {
             _PWSwitchLbl.text = "ƒRƒ}‚ÌˆÚ“®";

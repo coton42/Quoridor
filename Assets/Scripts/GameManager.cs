@@ -6,20 +6,27 @@ public class GameManager : MonoBehaviour
 
     private Board _board;
     private UIManager _UIManager;
-    private readonly int _playerNum = 2;
     private int _currentPlayer;
+
+    private const int _playerNum = 2;
 
     private void Awake()
     {
-        _board = new Board();
-        _board.Won += EndGame;
-        _board.SelectedInaccessibleLoc += ShowMsg;
+        _board = Board.GetBoard();
+        _board.InitializeBoard();
 
         _UIManager = _UIManagerObj.GetComponent<UIManager>();
         _UIManager.Moved += (x, y) =>
         {
             _board.Move(_currentPlayer, x, y);
-            ChangeTurn();
+            if (_board.WinnerNum != -1)
+            {
+                _UIManager.EndGame(_board.WinnerNum);
+            }
+            else
+            {
+                ChangeTurn();
+            }
         };
         _UIManager.TriedToPut += (s, t, isVertical) =>
         {
@@ -29,9 +36,13 @@ public class GameManager : MonoBehaviour
                 _UIManager.Put(s, t);
                 ChangeTurn();
             }
+            else
+            {
+                _UIManager.ShowMsg(_board.ErrorMsg);
+            }
         };
 
-        _currentPlayer = Random.Range(0, 2);
+        _currentPlayer = Random.Range(0, _playerNum);
     }
 
     private void Start()
@@ -40,7 +51,8 @@ public class GameManager : MonoBehaviour
         {
             _UIManager.UpdateNumWall(i, _board.NumsWall[i]);
         }
-        ChangeTurn();
+        var locs = _board.GetListOfAccessibleLocs(_currentPlayer);
+        _UIManager.ChangeTurn(_currentPlayer, locs);
     }
 
     private void ChangeTurn()
@@ -48,16 +60,6 @@ public class GameManager : MonoBehaviour
         _currentPlayer = (_currentPlayer + 1) % _playerNum;
         var locs = _board.GetListOfAccessibleLocs(_currentPlayer);
         _UIManager.ChangeTurn(_currentPlayer, locs);
-    }
-
-    private void ShowMsg(string msg)
-    {
-        _UIManager.ShowMsg(msg);
-    }
-
-    private void EndGame(int winnerIndex)
-    {
-        _UIManager.EndGame(winnerIndex);
     }
 }
 

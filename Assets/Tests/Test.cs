@@ -11,8 +11,7 @@ public class Test
     [SetUp]
     public void Setup()
     {
-        this.board = new Board();
-        board.Won += pn => Debug.Log($"Player{pn+1} Win!");
+        board = Board.GetBoard();
     }
 
     [Test]
