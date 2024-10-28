@@ -3,14 +3,19 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
+// singleton。boardの変更・テストが大変になる可能性
+// おそらくboardの変更はしないため保留
 public class Board
 {
     private static Board _instance = new Board();
-    private static int _boardSize = 9;
-    private static int _playerNum = 2;
 
     public static Board GetBoard() => _instance;
+    public static int playerNum = 2; // シーンロード時に人数を選択するための変数
+                                     // public static なので自由に変更できてしまう
+                                     // もっと良い方法は？
+                                     // InitializeBoardを呼ばない限りは変更されても問題ない
 
+    public const int boardSize = 9;
     public int[] NumsWall { get; private set; } // 壁の残り枚数
     public int WinnerNum { get; private set; } // -1で初期化、勝った人のindexに更新される
     public String ErrorMsg { get; private set; } // エラーメッセージ、壁が置けなかったときに更新
@@ -22,9 +27,12 @@ public class Board
 
     public void InitializeBoard()
     {
-        _players = new Player[_playerNum];
-        _players[0] = new Player(_boardSize - 1, (_boardSize - 1) / 2, Direction.North);
-        _players[1] = new Player(0, (_boardSize - 1) / 2, Direction.South);
+        _players = new Player[playerNum];
+
+        _players[0] = new Player(boardSize - 1, (boardSize - 1) / 2, Direction.North);
+        _players[1] = new Player(0, (boardSize - 1) / 2, Direction.South);
+        if (playerNum >= 3) _players[2] = new Player((boardSize - 1) / 2, 0, Direction.East);
+        if (playerNum >= 4) _players[3] = new Player((boardSize - 1) / 2, boardSize - 1, Direction.West);
 
         var boardMatSize = GetBoardMatSize();
         _boardMat = new bool[boardMatSize, boardMatSize];
@@ -36,7 +44,16 @@ public class Board
             _boardMat[boardMatSize - 1, i] = true;
         }
 
-        NumsWall = new int[2] { 10, 10 };
+        NumsWall = new int[playerNum];
+        var num = playerNum switch
+        {
+            2 => 10,
+            3 => 6,
+            4 => 5,
+            _ => 0
+        };
+        Array.Fill(NumsWall, num);
+
         WinnerNum = -1;
         ErrorMsg = "";
     }
@@ -60,9 +77,9 @@ public class Board
         dir switch
         {
             Direction.North => x == 0,
-            Direction.South => x == _boardSize - 1,
+            Direction.South => x == boardSize - 1,
             Direction.West => y == 0,
-            Direction.East => y == _boardSize - 1,
+            Direction.East => y == boardSize - 1,
             _ => false
         };
 
@@ -129,7 +146,7 @@ public class Board
         bool[,] isVisited;
         foreach (var p in _players)
         {
-            isVisited = new bool[_boardSize, _boardSize];
+            isVisited = new bool[boardSize, boardSize];
             if (!_FindPath(p.X, p.Y, p.Dir, isVisited)) return false;
         }
         return true;
@@ -226,7 +243,7 @@ public class Board
     private Direction GetLeftDirection(Direction dir) => (Direction)(((int)dir + 3) % 4);
     private Direction GetRightDirection(Direction dir) => (Direction)(((int)dir + 1) % 4);
 
-    private int GetBoardMatSize() => _boardSize * 2 + 1;
+    private int GetBoardMatSize() => boardSize * 2 + 1;
 
     private enum Direction
     {

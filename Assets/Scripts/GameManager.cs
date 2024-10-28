@@ -5,15 +5,15 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject _UIManagerObj;
 
     private Board _board;
+    private int _playerNum;
     private UIManager _UIManager;
     private int _currentPlayer;
-
-    private const int _playerNum = 2;
 
     private void Awake()
     {
         _board = Board.GetBoard();
         _board.InitializeBoard();
+        _playerNum = Board.playerNum;
 
         _UIManager = _UIManagerObj.GetComponent<UIManager>();
         _UIManager.Moved += (x, y) =>

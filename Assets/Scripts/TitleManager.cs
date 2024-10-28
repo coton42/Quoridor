@@ -9,8 +9,9 @@ public class TitleManager : MonoBehaviour
         _howToPlayPnl.SetActive(false);
     }
 
-    public void StartMatch()
+    public void StartMatch(int playerNum)
     {
+        Board.playerNum = playerNum;
         SceneLoader.StartMatch();
     }
 
