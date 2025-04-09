@@ -1,29 +1,34 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
-// singletonBboard‚Ì•ÏXEƒeƒXƒg‚ª‘å•Ï‚É‚È‚é‰Â”\«
-// ‚¨‚»‚ç‚­board‚Ì•ÏX‚Í‚µ‚È‚¢‚½‚ß•Û—¯
+// singletonã€‚boardã®å¤‰æ›´ãƒ»ãƒ†ã‚¹ãƒˆãŒå¤§å¤‰ã«ãªã‚‹å¯èƒ½æ€§
+// ãŠãã‚‰ãboardã®å¤‰æ›´ã¯ã—ãªã„ãŸã‚ä¿ç•™
 public class Board
 {
-    private static Board _instance = new Board();
-
-    public static Board GetBoard() => _instance;
-    public static int playerNum = 2; // ƒV[ƒ“ƒ[ƒh‚Él”‚ğ‘I‘ğ‚·‚é‚½‚ß‚Ì•Ï”
-                                     // public static ‚È‚Ì‚Å©—R‚É•ÏX‚Å‚«‚Ä‚µ‚Ü‚¤
-                                     // ‚à‚Á‚Æ—Ç‚¢•û–@‚ÍH
-                                     // InitializeBoard‚ğŒÄ‚Î‚È‚¢ŒÀ‚è‚Í•ÏX‚³‚ê‚Ä‚à–â‘è‚È‚¢
+    // public static ãªã®ã§è‡ªç”±ã«å¤‰æ›´ã§ãã¦ã—ã¾ã†
+    // ã‚‚ã£ã¨è‰¯ã„æ–¹æ³•ã¯ï¼Ÿ
+    // InitializeBoardã‚’å‘¼ã°ãªã„é™ã‚Šã¯å¤‰æ›´ã•ã‚Œã¦ã‚‚å•é¡Œãªã„
 
     public const int boardSize = 9;
-    public int[] NumsWall { get; private set; } // •Ç‚Ìc‚è–‡”
-    public int WinnerNum { get; private set; } // -1‚Å‰Šú‰»AŸ‚Á‚½l‚Ìindex‚ÉXV‚³‚ê‚é
-    public String ErrorMsg { get; private set; } // ƒGƒ‰[ƒƒbƒZ[ƒWA•Ç‚ª’u‚¯‚È‚©‚Á‚½‚Æ‚«‚ÉXV
-
-    private Player[] _players;
+    private static readonly Board _instance = new();
+    public static int playerNum = 2; // ã‚·ãƒ¼ãƒ³ãƒ­ãƒ¼ãƒ‰æ™‚ã«äººæ•°ã‚’é¸æŠã™ã‚‹ãŸã‚ã®å¤‰æ•°
     private bool[,] _boardMat;
 
-    private Board() {} // Singleton
+    private Player[] _players;
+
+    private Board()
+    {
+    } // Singleton
+
+    public int[] NumsWall { get; private set; } // å£ã®æ®‹ã‚Šæšæ•°
+    public int WinnerNum { get; private set; } // -1ã§åˆæœŸåŒ–ã€å‹ã£ãŸäººã®indexã«æ›´æ–°ã•ã‚Œã‚‹
+    public string ErrorMsg { get; private set; } // ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã€å£ãŒç½®ã‘ãªã‹ã£ãŸã¨ãã«æ›´æ–°
+
+    public static Board GetBoard()
+    {
+        return _instance;
+    }
 
     public void InitializeBoard()
     {
@@ -36,7 +41,7 @@ public class Board
 
         var boardMatSize = GetBoardMatSize();
         _boardMat = new bool[boardMatSize, boardMatSize];
-        for (int i = 0; i < boardMatSize; i++)
+        for (var i = 0; i < boardMatSize; i++)
         {
             _boardMat[i, 0] = true;
             _boardMat[i, boardMatSize - 1] = true;
@@ -67,14 +72,12 @@ public class Board
         _boardMat[i, j] = true;
         p.Move(newX, newY);
 
-        if (IsWinning(p.X, p.Y, p.Dir))
-        {
-            WinnerNum = playerIndex;
-        }
+        if (IsWinning(p.X, p.Y, p.Dir)) WinnerNum = playerIndex;
     }
 
-    private bool IsWinning(int x, int y, Direction dir) =>
-        dir switch
+    private bool IsWinning(int x, int y, Direction dir)
+    {
+        return dir switch
         {
             Direction.North => x == 0,
             Direction.South => x == boardSize - 1,
@@ -82,6 +85,7 @@ public class Board
             Direction.East => y == boardSize - 1,
             _ => false
         };
+    }
 
     public IReadOnlyList<(int, int)> GetListOfAccessibleLocs(int playerIndex)
     {
@@ -89,52 +93,43 @@ public class Board
         var (i, j) = GetBoardIndexFromCellLoc(p.X, p.Y);
         var locs = new List<(int, int)>();
 
-        foreach (Direction dir in Enum.GetValues(typeof(Direction)))
-        {
-            locs.AddRange(GetAccessibleLocs(i, j, dir));
-        }
+        foreach (Direction dir in Enum.GetValues(typeof(Direction))) locs.AddRange(GetAccessibleLocs(i, j, dir));
         return locs.Select(t => ((t.Item1 - 1) / 2, (t.Item2 - 1) / 2)).ToList().AsReadOnly();
     }
 
     private IEnumerable<(int, int)> GetAccessibleLocs(int i, int j, Direction dir) // 
     {
         var (wallI, wallJ) = GetBoardIndexFromDist(i, j, 1, dir);
-        if (!_boardMat[wallI, wallJ]) // •Ç‚ª‚È‚¯‚ê‚Î
+        if (!_boardMat[wallI, wallJ]) // å£ãŒãªã‘ã‚Œã°
         {
             var (newI, newJ) = GetBoardIndexFromDist(i, j, 2, dir);
-            if (_boardMat[newI, newJ]) // ‚»‚±‚ÉƒvƒŒƒCƒ„[‚ª‹‚é‚È‚ç‚Î
+            if (_boardMat[newI, newJ]) // ãã“ã«ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒå±…ã‚‹ãªã‚‰ã°
             {
                 (wallI, wallJ) = GetBoardIndexFromDist(i, j, 3, dir);
-                if (_boardMat[wallI, wallJ]) // ‚³‚ç‚É‚»‚Ìæ‚É•Ç‚ª‚ ‚ê‚Î
+                if (_boardMat[wallI, wallJ]) // ã•ã‚‰ã«ãã®å…ˆã«å£ãŒã‚ã‚Œã°
                 {
-                    // ¶•ûŒü‚Ìƒ`ƒFƒbƒN
+                    // å·¦æ–¹å‘ã®ãƒã‚§ãƒƒã‚¯
                     var left = GetLeftDirection(dir);
                     var (leftWallI, leftWallJ) = GetBoardIndexFromDist(newI, newJ, 1, left);
                     var (leftNewI, leftNewJ) = GetBoardIndexFromDist(newI, newJ, 2, left);
                     if (!_boardMat[leftWallI, leftWallJ] && !_boardMat[leftNewI, leftNewJ])
-                    {
                         yield return (leftNewI, leftNewJ);
-                    }
 
-                    // ‰E•ûŒü‚Ìƒ`ƒFƒbƒN
+                    // å³æ–¹å‘ã®ãƒã‚§ãƒƒã‚¯
                     var right = GetRightDirection(dir);
                     var (rightWallI, rightWallJ) = GetBoardIndexFromDist(newI, newJ, 1, right);
                     var (rightNewI, rightNewJ) = GetBoardIndexFromDist(newI, newJ, 2, right);
                     if (!_boardMat[rightWallI, rightWallJ] && !_boardMat[rightNewI, rightNewJ])
-                    {
                         yield return (rightNewI, rightNewJ);
-                    }
                 }
-                else // ‚³‚ç‚É‚»‚Ìæ‚É•Ç‚ª‚È‚¯‚ê‚Î
+                else // ã•ã‚‰ã«ãã®å…ˆã«å£ãŒãªã‘ã‚Œã°
                 {
                     var (furtherI, furtherJ) = GetBoardIndexFromDist(i, j, 4, dir);
-                    if (!_boardMat[furtherI, furtherJ]) // ‚³‚ç‚É‚»‚Ìæ‚ÉƒvƒŒƒCƒ„[‚ª‚¢‚È‚¯‚ê‚Î
-                    {
+                    if (!_boardMat[furtherI, furtherJ]) // ã•ã‚‰ã«ãã®å…ˆã«ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒã„ãªã‘ã‚Œã°
                         yield return (furtherI, furtherJ);
-                    }
                 }
             }
-            else // ‚»‚±‚ÉƒvƒŒƒCƒ„[‚ª‚¢‚È‚¯‚ê‚Î
+            else // ãã“ã«ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒã„ãªã‘ã‚Œã°
             {
                 yield return (newI, newJ);
             }
@@ -149,6 +144,7 @@ public class Board
             isVisited = new bool[boardSize, boardSize];
             if (!_FindPath(p.X, p.Y, p.Dir, isVisited)) return false;
         }
+
         return true;
 
         bool _FindPath(int x, int y, Direction playerDir, bool[,] isVisited)
@@ -159,7 +155,7 @@ public class Board
             if (IsWinning(x, y, playerDir)) return true;
 
             var (i, j) = GetBoardIndexFromCellLoc(x, y);
-            var seq = new int[] { 0, 1, 3, 2 }; // –Ú•W•ûŒü‚É‘Î‚µ‚ÄA³–ÊA‰EA¶AŒã‚ë‚Ì‡‚ÉŠm”FBA*‚à‚Ç‚«
+            var seq = new[] { 0, 1, 3, 2 }; // ç›®æ¨™æ–¹å‘ã«å¯¾ã—ã¦ã€æ­£é¢ã€å³ã€å·¦ã€å¾Œã‚ã®é †ã«ç¢ºèªã€‚A*ã‚‚ã©ã
             foreach (var c in seq)
             {
                 var nextDir = (Direction)(((int)playerDir + c) % 4);
@@ -178,14 +174,12 @@ public class Board
     {
         if (NumsWall[playerIndex] <= 0)
         {
-            ErrorMsg = "è‚¿‚Ì•Ç‚ª‚ ‚è‚Ü‚¹‚ñI";
+            ErrorMsg = "æ‰‹æŒã¡ã®å£ãŒã‚ã‚Šã¾ã›ã‚“ï¼";
             return false;
         }
+
         var (i, j) = GetBoardIndexFromWallLoc(s, t);
-        if (_boardMat[i, j])
-        {
-            return false;
-        }
+        if (_boardMat[i, j]) return false;
 
         var io1 = isVertical ? -1 : 0;
         var io2 = isVertical ? 1 : 0;
@@ -194,7 +188,7 @@ public class Board
 
         if (_boardMat[i + io1, j + jo1] || _boardMat[i + io2, j + jo2])
         {
-            ErrorMsg = "•Ç‚ªd‚È‚Á‚Ä‚¢‚Ü‚·I";
+            ErrorMsg = "å£ãŒé‡ãªã£ã¦ã„ã¾ã™ï¼";
             return false;
         }
 
@@ -207,7 +201,7 @@ public class Board
             _boardMat[i, j] = false;
             _boardMat[i + io1, j + jo1] = false;
             _boardMat[i + io2, j + jo2] = false;
-            ErrorMsg = "‚»‚±‚É‚Í•Ç‚ğ‚¨‚¯‚Ü‚¹‚ñI";
+            ErrorMsg = "ãã“ã«ã¯å£ã‚’ãŠã‘ã¾ã›ã‚“ï¼";
             return false;
         }
 
@@ -216,23 +210,34 @@ public class Board
     }
 
     /*
-     * ƒ}ƒX‚ÌÀ•W (x, y) ‚É‚Â‚¢‚Ä 0 <= x, y <= 8 
-     * boardMat ‚ÌƒCƒ“ƒfƒbƒNƒX (i, j) ‚É‘Î‚µ‚Ä
+     * ãƒã‚¹ã®åº§æ¨™ (x, y) ã«ã¤ã„ã¦ 0 <= x, y <= 8
+     * boardMat ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ (i, j) ã«å¯¾ã—ã¦
      * (i, j) = 2 * (x, y) + (1, 1)
-    */
-    private (int, int) GetBoardIndexFromCellLoc(int x, int y) => (2 * x + 1, 2 * y + 1);
-    private (int, int) GetCellLocFromBoardIndex(int i, int j) => ((i - 1) / 2, (j - 1) / 2);
+     */
+    private (int, int) GetBoardIndexFromCellLoc(int x, int y)
+    {
+        return (2 * x + 1, 2 * y + 1);
+    }
+
+    private (int, int) GetCellLocFromBoardIndex(int i, int j)
+    {
+        return ((i - 1) / 2, (j - 1) / 2);
+    }
 
 
     /*
-     * •Ç‚ÌÀ•WiŠiq“_j(s, t) ‚É‚Â‚¢‚Ä 0 <= s, t <= 7 
-     * boardMat ‚ÌƒCƒ“ƒfƒbƒNƒX (i, j) ‚É‘Î‚µ‚Ä
+     * å£ã®åº§æ¨™ï¼ˆæ ¼å­ç‚¹ï¼‰(s, t) ã«ã¤ã„ã¦ 0 <= s, t <= 7
+     * boardMat ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ (i, j) ã«å¯¾ã—ã¦
      * (i, j) = 2 * (s, t) + (2, 2)
-    */
-    private (int, int) GetBoardIndexFromWallLoc(int s, int t) => (2 * s + 2, 2 * t + 2);
+     */
+    private (int, int) GetBoardIndexFromWallLoc(int s, int t)
+    {
+        return (2 * s + 2, 2 * t + 2);
+    }
 
-    private (int, int) GetBoardIndexFromDist(int i, int j, int dist, Direction dir) =>
-        dir switch
+    private (int, int) GetBoardIndexFromDist(int i, int j, int dist, Direction dir)
+    {
+        return dir switch
         {
             Direction.North => (i - dist, j),
             Direction.South => (i + dist, j),
@@ -240,10 +245,22 @@ public class Board
             Direction.East => (i, j + dist),
             _ => (-1, -1)
         };
-    private Direction GetLeftDirection(Direction dir) => (Direction)(((int)dir + 3) % 4);
-    private Direction GetRightDirection(Direction dir) => (Direction)(((int)dir + 1) % 4);
+    }
 
-    private int GetBoardMatSize() => boardSize * 2 + 1;
+    private Direction GetLeftDirection(Direction dir)
+    {
+        return (Direction)(((int)dir + 3) % 4);
+    }
+
+    private Direction GetRightDirection(Direction dir)
+    {
+        return (Direction)(((int)dir + 1) % 4);
+    }
+
+    private int GetBoardMatSize()
+    {
+        return boardSize * 2 + 1;
+    }
 
     private enum Direction
     {
@@ -255,16 +272,16 @@ public class Board
 
     private class Player
     {
-        public int X { get; private set; }
-        public int Y { get; private set; }
-        public Direction Dir { get; }
-
         public Player(int x, int y, Direction dir)
         {
             X = x;
             Y = y;
             Dir = dir;
         }
+
+        public int X { get; private set; }
+        public int Y { get; private set; }
+        public Direction Dir { get; }
 
         public void Move(int newX, int newY)
         {

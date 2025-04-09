@@ -5,9 +5,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject _UIManagerObj;
 
     private Board _board;
+    private int _currentPlayer;
     private int _playerNum;
     private UIManager _UIManager;
-    private int _currentPlayer;
 
     private void Awake()
     {
@@ -20,13 +20,9 @@ public class GameManager : MonoBehaviour
         {
             _board.Move(_currentPlayer, x, y);
             if (_board.WinnerNum != -1)
-            {
                 _UIManager.EndGame(_board.WinnerNum);
-            }
             else
-            {
                 ChangeTurn();
-            }
         };
         _UIManager.TriedToPut += (s, t, isVertical) =>
         {
@@ -47,10 +43,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        for (var i = 0; i < _playerNum; i++)
-        {
-            _UIManager.UpdateNumWall(i, _board.NumsWall[i]);
-        }
+        for (var i = 0; i < _playerNum; i++) _UIManager.UpdateNumWall(i, _board.NumsWall[i]);
         var locs = _board.GetListOfAccessibleLocs(_currentPlayer);
         _UIManager.ChangeTurn(_currentPlayer, locs);
     }
@@ -62,4 +55,3 @@ public class GameManager : MonoBehaviour
         _UIManager.ChangeTurn(_currentPlayer, locs);
     }
 }
-

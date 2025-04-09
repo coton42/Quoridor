@@ -3,18 +3,15 @@ using UnityEngine;
 
 public class ICellHandler : MonoBehaviour
 {
-    public event Action<int, int> Clicked;
-    private void OnClicked() => Clicked?.Invoke(X, Y);
-
-    public int X { get; private set; }
-    public int Y { get; private set; }
-
     [SerializeField] private Material _highlightedMat;
 
     private bool _isAccessible;
+    private Light _light;
     private Material _regularMat;
     private Renderer _renderer;
-    private Light _light;
+
+    public int X { get; private set; }
+    public int Y { get; private set; }
 
     private void Awake()
     {
@@ -29,10 +26,7 @@ public class ICellHandler : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        if (_isAccessible)
-        {
-            _renderer.material = _highlightedMat;
-        }
+        if (_isAccessible) _renderer.material = _highlightedMat;
     }
 
     private void OnMouseExit()
@@ -47,6 +41,13 @@ public class ICellHandler : MonoBehaviour
             _renderer.material = _regularMat;
             OnClicked();
         }
+    }
+
+    public event Action<int, int> Clicked;
+
+    private void OnClicked()
+    {
+        Clicked?.Invoke(X, Y);
     }
 
     public void Activate(Color color)

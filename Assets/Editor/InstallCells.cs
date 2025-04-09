@@ -6,13 +6,10 @@ public class InstallCells : MonoBehaviour
     [MenuItem("Tools/Rename with Numbering")]
     private static void RenameSelectedObjects()
     {
-        // ‘I‘ð‚µ‚½ƒIƒuƒWƒFƒNƒg‚ðŽæ“¾
-        GameObject[] selectedObjects = Selection.gameObjects;
+        // ï¿½Iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½gï¿½ï¿½ï¿½æ“¾
+        var selectedObjects = Selection.gameObjects;
 
-        // ƒIƒuƒWƒFƒNƒg‚Ì–¼‘O‚É˜A”Ô‚ð•t—^
-        for (int i = 0; i < selectedObjects.Length; i++)
-        {
-            selectedObjects[i].name += i;
-        }
+        // ï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½gï¿½Ì–ï¿½ï¿½Oï¿½É˜Aï¿½Ô‚ï¿½tï¿½^
+        for (var i = 0; i < selectedObjects.Length; i++) selectedObjects[i].name += i;
     }
 }
