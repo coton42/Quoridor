@@ -4,20 +4,20 @@ using System.Linq;
 
 // singleton。boardの変更・テストが大変になる可能性
 // おそらくboardの変更はしないため保留
-public class Board
+public class MatchBoardService
 {
     // public static なので自由に変更できてしまう
     // もっと良い方法は？
     // InitializeBoardを呼ばない限りは変更されても問題ない
 
     public const int boardSize = 9;
-    private static readonly Board _instance = new();
+    private static readonly MatchBoardService _instance = new();
     public static int playerNum = 2; // シーンロード時に人数を選択するための変数
     private bool[,] _boardMat;
 
     private Player[] _players;
 
-    private Board()
+    private MatchBoardService()
     {
     } // Singleton
 
@@ -25,7 +25,7 @@ public class Board
     public int WinnerNum { get; private set; } // -1で初期化、勝った人のindexに更新される
     public string ErrorMsg { get; private set; } // エラーメッセージ、壁が置けなかったときに更新
 
-    public static Board GetBoard()
+    public static MatchBoardService GetBoard()
     {
         return _instance;
     }

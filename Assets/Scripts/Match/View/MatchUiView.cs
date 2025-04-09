@@ -4,17 +4,17 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
-public class UIManager : MonoBehaviour
+public class MatchUiView : MonoBehaviour
 {
     [SerializeField] private GameObject _UICanvas;
     [SerializeField] private GameObject[] _players;
     [SerializeField] private GameObject _cellsParent;
     [SerializeField] private GameObject _WallCellsParent;
 
-    private readonly int _boardSize = Board.boardSize;
+    private readonly int _boardSize = MatchBoardService.boardSize;
     private IReadOnlyList<(int, int)> _accessibleLocs;
 
-    private ICellHandler[,] _cells;
+    private MatchCellView[,] _cells;
     private int _currentPlayer;
     private TextMeshProUGUI _errMsg;
     private GameObject _howToPlayPnl;
@@ -29,7 +29,7 @@ public class UIManager : MonoBehaviour
     private TextMeshProUGUI _PWSwitchLbl;
     private GameObject _resultPnl;
     private (int, int) _selectedWallCell;
-    private IWallCellHandler[,] _wallCells;
+    private MatchWallCellView[,] _wallCells;
     private TextMeshProUGUI[] _wallNumsTxt;
     private GameObject _wallPnl;
     private RectTransform _wallPnlTransform;
@@ -45,12 +45,12 @@ public class UIManager : MonoBehaviour
         _PWSwitchLbl = _matchPnl.transform.Find("Change Mode").Find("Text (TMP)").GetComponent<TextMeshProUGUI>();
         _wallPnlTransform = _wallPnl.GetComponent<RectTransform>();
 
-        _cells = new ICellHandler[_boardSize, _boardSize];
-        _wallCells = new IWallCellHandler[_boardSize - 1, _boardSize - 1];
+        _cells = new MatchCellView[_boardSize, _boardSize];
+        _wallCells = new MatchWallCellView[_boardSize - 1, _boardSize - 1];
 
         _resultPnl.SetActive(false);
         _pausePnl.SetActive(false);
-        _playerNum = Board.playerNum;
+        _playerNum = MatchBoardService.playerNum;
 
         for (var i = 0; i < _playerNum; i++) _players[i].SetActive(true);
         for (var i = _playerNum; i < _players.Length; i++) _players[i].SetActive(false);
@@ -79,14 +79,14 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        var cells = _cellsParent.GetComponentsInChildren<ICellHandler>();
+        var cells = _cellsParent.GetComponentsInChildren<MatchCellView>();
         foreach (var cell in cells)
         {
             cell.Clicked += Move;
             _cells[cell.X, cell.Y] = cell;
         }
 
-        var wallCells = _WallCellsParent.GetComponentsInChildren<IWallCellHandler>();
+        var wallCells = _WallCellsParent.GetComponentsInChildren<MatchWallCellView>();
         foreach (var wallCell in wallCells)
         {
             wallCell.Selected += UpdateSelectedWallCell;

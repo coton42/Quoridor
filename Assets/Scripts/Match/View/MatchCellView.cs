@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class ICellHandler : MonoBehaviour
+public class MatchCellView : MonoBehaviour
 {
     [SerializeField] private Material _highlightedMat;
 

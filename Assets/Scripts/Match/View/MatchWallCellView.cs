@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class IWallCellHandler : MonoBehaviour
+public class MatchWallCellView : MonoBehaviour
 {
     private Material _wallMat;
 

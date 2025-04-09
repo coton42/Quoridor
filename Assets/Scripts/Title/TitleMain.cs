@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class TitleManager : MonoBehaviour
+public class TitleMain : MonoBehaviour
 {
     [SerializeField] private GameObject _howToPlayPnl;
 
@@ -11,7 +11,7 @@ public class TitleManager : MonoBehaviour
 
     public void StartMatch(int playerNum)
     {
-        Board.playerNum = playerNum;
+        MatchBoardService.playerNum = playerNum;
         SceneLoader.StartMatch();
     }
 
