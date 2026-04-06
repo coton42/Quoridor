@@ -39,6 +39,6 @@
 
 ## ビルド方法
 
-1. [Unity 6000.0.45f1](https://unity.com/releases/editor/archive) をインストールします。
+1. [Unity 6000.3.8f1](https://unity.com/releases/editor/archive) をインストールします。
 2. Unity Hub でこのリポジトリのフォルダを開きます。
 3. `File > Build Settings` から **Android** プラットフォームを選択し、ビルドします。
