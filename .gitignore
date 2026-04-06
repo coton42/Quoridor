@@ -71,6 +71,22 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
-# These exceed 100 MB
-/Assets/Fonts/M_PLUS_Rounded_1c/MPLUSRounded1c-Black SDF.asset
-/Assets/Fonts/M_PLUS_Rounded_1c/MPLUSRounded1c-Light SDF.asset
+
+
+# Editor依存
+.idea
+.vscode
+
+# macOS
+.DS_Store
+
+# Unity一時ファイル
+.utmp/
+Assets/~UnityDirMonSyncFile~*
+
+# TextMesh Pro Essentials（Unity が自動生成）
+Assets/TextMesh Pro/
+Assets/TextMesh Pro.meta
+
+# Burst デバッグ情報（DoNotShip）
+*_BurstDebugInformation_DoNotShip/
