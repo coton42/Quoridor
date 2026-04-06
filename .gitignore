@@ -74,6 +74,7 @@ crashlytics-build.properties
 
 
 # Editor依存
+.vsconfig
 .idea
 .vscode
 
